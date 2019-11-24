@@ -8,13 +8,13 @@ your_own::your_own() {
   int idx_bit = 15;	// changed idx_bit to 15
   num_predictor_entry = pow(2, idx_bit);
   c_bit = 2;
-  reg_size = 14;
+  reg_size = 14; // BHR size
   table_size = pow(2, reg_size);
   mask = table_size - 1;
   pred_arr = new int[num_predictor_entry];
   BHR = new int[reg_size];
   gPHT = new int[table_size];
-  cPHT = new int[table_size];
+  mPHT = new int[table_size];
   for (int i = 0; i < num_predictor_entry; i++) {
 	  pred_arr[i] = 2;
   }
@@ -23,7 +23,7 @@ your_own::your_own() {
   }
   for (int i = 0; i < table_size; i++) {
 	  gPHT[i] = 1;
-	  cPHT[i] = 1;
+	  mPHT[i] = 1;
   }
 };
 
@@ -31,7 +31,7 @@ your_own::~your_own() {
   if (pred_arr != NULL) delete[] pred_arr;
   if (BHR != NULL) delete[] BHR;
   if (gPHT != NULL) delete[] gPHT;
-  if (cPHT != NULL) delete[] cPHT;
+  if (mPHT != NULL) delete[] mPHT;
 }
 
 /* warning!!! Don't change argument of these function   */
@@ -61,7 +61,7 @@ int your_own::getMetaPred(int pc) {
 		idx2 += pow(2, i) * BHR[i];
 	}
 	int idx3 = idx1 ^ idx2;
-	return cPHT[idx3] / 2;
+	return mPHT[idx3] / 2;
 }
 
 void your_own::update(int pc, int res) {
@@ -117,13 +117,13 @@ void your_own::update(int pc, int res) {
 	}
 
 	if (c[0] == 0 && c[1] == 1) {
-		if (cPHT[idx3] != 0) {
-			cPHT[idx3] -= 1;
+		if (mPHT[idx3] != 0) {
+			mPHT[idx3] -= 1;
 		}
 	}
 	else if (c[0] == 1 && c[1] == 0) {
-		if (cPHT[idx3] != 3) {
-			cPHT[idx3] += 1;
+		if (mPHT[idx3] != 3) {
+			mPHT[idx3] += 1;
 		}
 	}
 
