@@ -9,14 +9,13 @@ class your_own {
   int num_predictor_entry;
   int c_bit;
   int *pred_arr;
-  // added
+  // ADDED
   int reg_size;
   int table_size;
   int mask;
-  int* BHR;	// branch history register
-  // Pattern Histroy tables
-  int* gPHT;
-  int* cPHT;
+  int* BHR;	// Branch history register
+  int* gPHT; // Global pattern history table
+  int* mPHT; // Meta pattern history table
 
  public:
   your_own();
