@@ -5,33 +5,33 @@
 #include <string.h>
 #include <time.h>
 your_own::your_own() {
-  int idx_bit = 15;	// changed idx_bit to 15
-  num_predictor_entry = pow(2, idx_bit);
-  c_bit = 2;
-  reg_size = 14; // BHR size
-  table_size = pow(2, reg_size);
-  mask = table_size - 1;
-  pred_arr = new int[num_predictor_entry];
-  BHR = new int[reg_size];
-  gPHT = new int[table_size];
-  mPHT = new int[table_size];
-  for (int i = 0; i < num_predictor_entry; i++) {
-	  pred_arr[i] = 2;
-  }
-  for (int i = 0; i < reg_size; i++) {
-	  BHR[i] = 0;
-  }
-  for (int i = 0; i < table_size; i++) {
-	  gPHT[i] = 1;
-	  mPHT[i] = 1;
-  }
+	int idx_bit = 14;	// changed idx_bit to 15
+	num_predictor_entry = pow(2, idx_bit);
+	c_bit = 2;
+	reg_size = 14; // BHR size
+	table_size = pow(2, reg_size);
+	mask = table_size - 1;
+	pred_arr = new int[num_predictor_entry];
+	BHR = new int[reg_size];
+	gPHT = new int[table_size];
+	mPHT = new int[table_size];
+	for (int i = 0; i < num_predictor_entry; i++) {
+		pred_arr[i] = 2;
+	}
+	for (int i = 0; i < reg_size; i++) {
+		BHR[i] = 0;
+	}
+	for (int i = 0; i < table_size; i++) {
+		gPHT[i] = 1;
+		mPHT[i] = 1;
+	}
 };
 
 your_own::~your_own() {
-  if (pred_arr != NULL) delete[] pred_arr;
-  if (BHR != NULL) delete[] BHR;
-  if (gPHT != NULL) delete[] gPHT;
-  if (mPHT != NULL) delete[] mPHT;
+	if (pred_arr != NULL) delete[] pred_arr;
+	if (BHR != NULL) delete[] BHR;
+	if (gPHT != NULL) delete[] gPHT;
+	if (mPHT != NULL) delete[] mPHT;
 }
 
 /* warning!!! Don't change argument of these function   */
