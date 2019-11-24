@@ -4,40 +4,131 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-// this is simple Bimodal predictor with 10 bit entry index bit and 2 bit entry
-// predictor return 1(taken) when highest bit of entry set as 1
 your_own::your_own() {
-  int idx_bit = 10;
+  int idx_bit = 15;	// changed idx_bit to 15
   num_predictor_entry = pow(2, idx_bit);
   c_bit = 2;
-  pred_arr = new int[num_predictor_entry]{
-      0,
-  };
+  reg_size = 14;
+  table_size = pow(2, reg_size);
+  mask = table_size - 1;
+  pred_arr = new int[num_predictor_entry];
+  BHR = new int[reg_size];
+  gPHT = new int[table_size];
+  cPHT = new int[table_size];
+  for (int i = 0; i < num_predictor_entry; i++) {
+	  pred_arr[i] = 2;
+  }
+  for (int i = 0; i < reg_size; i++) {
+	  BHR[i] = 0;
+  }
+  for (int i = 0; i < table_size; i++) {
+	  gPHT[i] = 1;
+	  cPHT[i] = 1;
+  }
 };
+
 your_own::~your_own() {
   if (pred_arr != NULL) delete[] pred_arr;
+  if (BHR != NULL) delete[] BHR;
+  if (gPHT != NULL) delete[] gPHT;
+  if (cPHT != NULL) delete[] cPHT;
 }
+
 /* warning!!! Don't change argument of these function   */
 int your_own::get_pred(int pc) {
-  int idx = pc % num_predictor_entry;
-  int prediction = (pred_arr[idx]) / (pow(2, (c_bit - 1)));
-  return prediction;
+	int idx = pc % num_predictor_entry;
+	int prediction = pred_arr[idx] / pow(2, c_bit - 1);
+	if (getMetaPred(pc) == 1) {
+		return getGlobalPred(pc);
+	}
+	return prediction;
 }
+
+int your_own::getGlobalPred(int pc) {
+	int idx1 = pc & mask;
+	int idx2 = 0;
+	for (int i = 0; i < reg_size; i++) {
+		idx2 += pow(2, i) * BHR[i];
+	}
+	int idx3 = idx1 ^ idx2;
+	return gPHT[idx3] / 2;
+}
+
+int your_own::getMetaPred(int pc) {
+	int idx1 = pc & mask;
+	int idx2 = 0;
+	for (int i = 0; i < reg_size; i++) {
+		idx2 += pow(2, i) * BHR[i];
+	}
+	int idx3 = idx1 ^ idx2;
+	return cPHT[idx3] / 2;
+}
+
 void your_own::update(int pc, int res) {
-  int idx = pc % num_predictor_entry;
-  int *arr = pred_arr;
-  int bit = c_bit;
-  if (res == 1) {
-    if ((arr[idx] + 1) <= (pow(2, bit) - 1)) {
-      if (arr[idx] == 1) arr[idx] += 1;
-      arr[idx] = arr[idx] + 1;
-    } else
-      arr[idx] = pow(2, bit) - 1;
-  } else {
-    if ((arr[idx] - 1) >= 0) {
-      if (arr[idx] == 2) arr[idx] -= 1;
-      arr[idx] = arr[idx] - 1;
-    } else
-      arr[idx] = 0;
-  }
+	int idx = pc % num_predictor_entry;
+	int *arr = pred_arr;
+	int bit = c_bit;
+	int pred = pred_arr[idx] / pow(2, c_bit - 1);
+  
+	int idx1 = pc & mask;
+	int idx2 = 0;
+	for (int i = 0; i < reg_size; i++) {
+		idx2 += pow(2, i) * BHR[i];
+	}
+	int idx3 = idx1 ^ idx2;
+	idx3 = idx3 & mask;
+  
+	int c0 = (getGlobalPred(pc) == res) ? 1 : 0;
+	int c1 = (pred == res) ? 1 : 0;
+	int c[2] = { c0, c1 };
+
+	if (res == 1) {
+		if (arr[idx] == 3) {
+			arr[idx] = 3;
+		}
+		else {
+			arr[idx] += 1;
+		}
+	}
+	else {
+		if (arr[idx] == 0) {
+			arr[idx] = 0;
+		}
+		else {
+			arr[idx] -= 1;
+		}
+	}
+
+	if (res == 1) {
+		if (gPHT[idx3] == 3) {
+			gPHT[idx3] = 3;
+		}
+		else {
+			gPHT[idx3] += 1;
+		}
+	}
+	else {
+		if (gPHT[idx3] == 0) {
+			gPHT[idx3] = 0;
+		}
+		else {
+			gPHT[idx3] -= 1;
+		}
+	}
+
+	if (c[0] == 0 && c[1] == 1) {
+		if (cPHT[idx3] != 0) {
+			cPHT[idx3] -= 1;
+		}
+	}
+	else if (c[0] == 1 && c[1] == 0) {
+		if (cPHT[idx3] != 3) {
+			cPHT[idx3] += 1;
+		}
+	}
+
+	for (int i = reg_size - 1; i > 0; i--) {
+		BHR[i] = BHR[i - 1];
+	}
+	BHR[0] = res;
 }
