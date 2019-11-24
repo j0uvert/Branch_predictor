@@ -5,16 +5,17 @@
 #include <string.h>
 #include <time.h>
 your_own::your_own() {
-	int idx_bit = 14;	// changed idx_bit to 15
+	int idx_bit = 14;	// changed idx_bit to 14
 	num_predictor_entry = pow(2, idx_bit);
 	c_bit = 2;
 	reg_size = 14; // BHR size
-	table_size = pow(2, reg_size);
+	table_size = pow(2, reg_size); // gPHT, mPHT size
 	mask = table_size - 1;
 	pred_arr = new int[num_predictor_entry];
 	BHR = new int[reg_size];
 	gPHT = new int[table_size];
 	mPHT = new int[table_size];
+	// Initialize
 	for (int i = 0; i < num_predictor_entry; i++) {
 		pred_arr[i] = 2;
 	}
@@ -41,7 +42,9 @@ int your_own::get_pred(int pc) {
 	if (getMetaPred(pc) == 1) {
 		return getGlobalPred(pc);
 	}
-	return prediction;
+	else {
+		return prediction;
+	}
 }
 
 int your_own::getGlobalPred(int pc) {
@@ -78,9 +81,9 @@ void your_own::update(int pc, int res) {
 	int idx3 = idx1 ^ idx2;
 	idx3 = idx3 & mask;
   
-	int c0 = (getGlobalPred(pc) == res) ? 1 : 0;
-	int c1 = (pred == res) ? 1 : 0;
-	int c[2] = { c0, c1 };
+	int gRes = (getGlobalPred(pc) == res) ? 1 : 0;
+	int pRes = (pred == res) ? 1 : 0;
+	int foo[2] = { gRes, pRes };
 
 	if (res == 1) {
 		if (arr[idx] == 3) {
@@ -116,12 +119,12 @@ void your_own::update(int pc, int res) {
 		}
 	}
 
-	if (c[0] == 0 && c[1] == 1) {
+	if (foo[0] == 0 && foo[1] == 1) {
 		if (mPHT[idx3] != 0) {
 			mPHT[idx3] -= 1;
 		}
 	}
-	else if (c[0] == 1 && c[1] == 0) {
+	else if (foo[0] == 1 && foo[1] == 0) {
 		if (mPHT[idx3] != 3) {
 			mPHT[idx3] += 1;
 		}
